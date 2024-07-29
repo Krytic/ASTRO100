@@ -1,4 +1,5 @@
 import configparser
+import os
 
 import numpy as np
 import pandas as pd
@@ -26,12 +27,12 @@ print(f'Streaming {len(students)} students into {n_groups} groups across {len(da
 days = dict(enumerate(days))
 
 group_cntrs = {
-	day: 0
-	for day in days.values()
+    day: 0
+    for day in days.values()
 }
 
 with open('Student_List.tex', 'w') as file:
-	file.write(fr"""\documentclass{{article}}
+    file.write(fr"""\documentclass{{article}}
 
 \usepackage[margin=1in]{{geometry}}
 \usepackage{{booktabs}}
@@ -52,36 +53,36 @@ with open('Student_List.tex', 'w') as file:
         \endfoot
 """)
 
-	for i, row in students.iterrows():
-		parts = row['sections'].split(" ")
+    for i, row in students.iterrows():
+        parts = row['sections'].split(" ")
 
-		if row['login_id'] not in switches.keys():
-			lab_day_code = [part for part in parts if part.startswith("B")][0]
-		else:
-			lab_day_code = switches[row['login_id']]
+        if row['login_id'] not in switches.keys():
+            lab_day_code = [part for part in parts if part.startswith("B")][0]
+        else:
+            lab_day_code = switches[row['login_id']]
 
-		lab_day_as_str = lab_day_code[1:3]
+        lab_day_as_str = lab_day_code[1:3]
 
-		lab_day = days[int(lab_day_as_str)-1]
+        lab_day = days[int(lab_day_as_str)-1]
 
-		group_cntrs[lab_day] += 1
+        group_cntrs[lab_day] += 1
 
-		student_group = lab_day + str(group_cntrs[lab_day])
+        student_group = lab_day + str(group_cntrs[lab_day])
 
-		students.loc[i, 'group_name'] = student_group
+        students.loc[i, 'group_name'] = student_group
 
-		lastname, firstname = row['name'].split(',')
+        lastname, firstname = row['name'].split(',')
 
-		start = group_cntrs[lab_day]
-		for i in range(4):
-		    locals()[f'week{3+2*i}'] = (start-1+i)%4+1
+        start = group_cntrs[lab_day]
+        for i in range(4):
+            locals()[f'week{3+2*i}'] = (start-1+i)%4+1
 
-		file.write(f"        {firstname} & {lastname} & {student_group} & {week3} & {week5} & {week7} & {week9} \\\\\n")
+        file.write(f"        {firstname} & {lastname} & {student_group} & {week3} & {week5} & {week7} & {week9} \\\\\n")
 
-		if group_cntrs[lab_day] == n_groups:
-			group_cntrs[lab_day] = 0
+        if group_cntrs[lab_day] == n_groups:
+            group_cntrs[lab_day] = 0
 
-	file.write(r"""        \bottomrule
+    file.write(r"""        \bottomrule
     \end{longtable}
 \end{document}
 """)
@@ -89,36 +90,34 @@ with open('Student_List.tex', 'w') as file:
 group_names = [k1+str(k2) for k1 in days.values() for k2 in group_nums]
 
 df_summary = pd.DataFrame.from_dict({
-	k: [0] for k in group_names
+    k: [0] for k in group_names
 })
 
 for group in group_names:
-	with open(f'groups/{group}', 'w') as file:
-		pass
+    with open(f'groups/{group}', 'w') as file:
+        pass
 
 upis = {g: '' for g in group_names}
 
 for i, row in students.iterrows():
-	upis[row['group_name']] += (row['login_id'] + "@aucklanduni.ac.nz; ")
+    upis[row['group_name']] += (row['login_id'] + "@aucklanduni.ac.nz; ")
 
-	df_summary[row['group_name']] += 1
-
-import os
+    df_summary[row['group_name']] += 1
 
 for group, upi in upis.items():
-	upis[group] = upi.rstrip("; ")
+    upis[group] = upi.rstrip("; ")
 
 for group in group_names:
-	day = group[:-1]
-	expt = group[-1]
+    day = group[:-1]
+    expt = group[-1]
 
-	with open('email_template', 'r') as f:
-		message_body = (f.read().replace('|group|', group)
-								.replace('|day|', day)
-								.replace('|expt|', expt))
+    with open('email_template', 'r') as f:
+        message_body = (f.read().replace('|group|', group)
+                                .replace('|day|', day)
+                                .replace('|expt|', expt))
 
-	with open(f'groups/{group}', 'a') as file:
-		file.write(rf'''{upis[group]}
+    with open(f'groups/{group}', 'a') as file:
+        file.write(rf'''{upis[group]}
 
 {message_body}''')
 

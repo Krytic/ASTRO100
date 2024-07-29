@@ -1,7 +1,8 @@
 import configparser
+import subprocess
 
 config = configparser.ConfigParser()
-config = config.read('TestData.ini')
+config.read('TestData.ini')
 
 def get_students_in_band(start, end):
     start, end = start.lower(), end.lower()
@@ -23,6 +24,8 @@ def get_students_in_band(start, end):
             student[0], student[1] = student[1], student[0]
 
             students.append(student)
+
+    students.sort(key=lambda x: x[1].lower())
 
     return students
 
@@ -48,10 +51,10 @@ with open('student_list.tex', 'w') as f:
         n = len(students)
 
         f.write(r"    \begin{center}" + "\n")
-        f.write(r"        {\Huge\textbf{" + meta['test_building'] + "-" + room + f" ({n} students)" + r"}} " + "\n")
+        f.write(r"        {\Huge\textbf{" + meta['test_building'] + "-" + room.upper() + f" ({n} students)" + r"}} " + "\n")
         f.write(r"    \end{center}" + "\n")
 
-        f.write(r"""    \begin{longtable}{c|@{~~}c|c|c|c|c}
+        f.write(r"""    \begin{longtable}{c|@{~~}c|c|c|c|p{0.3\textwidth}}
         \toprule
         \textbf{First Name} & \textbf{Last Name} & \textbf{UPI} & \textbf{Student ID} & \textbf{Has ID?} & \textbf{Notes} \\
         \midrule
@@ -73,14 +76,20 @@ with open('student_list.tex', 'w') as f:
     f.write(r"\end{document}")
 
 with open('student_rooms.tex', 'w') as f:
-    f.write(r"""\documentclass{article}
+    f.write(r"""\documentclass[a4paper]{article}
 
 \usepackage[landscape]{geometry}
 \usepackage{fancyhdr}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage{anyfontsize}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{soul}
 
 \pagestyle{empty}
+\pagecolor{JungleGreen}
+\definecolor{RubyPurple}{HTML}{7B287D}
+\sethlcolor{RubyPurple}
 
 \begin{document}
     \fontsize{48pt}{48pt}\selectfont
@@ -91,12 +100,14 @@ with open('student_rooms.tex', 'w') as f:
         f.write(r"""
     \begin{center}
         \vspace*{\fill}
-        ASTRO 100 TEST \\
+        \begingroup\fontsize{64pt}{64pt}\selectfont ASTRO 100 TEST\endgroup \\
+        {\fontsize{36pt}{36pt}\selectfont
         \vspace{3cm}
-        """ + meta['test_building'] + "-" + room + r""" \\
+        """ + meta['test_building'] + "-" + room.upper() + r""" \\
         \vspace{3cm}
-        """ + f"{people[0]}-{people[1]}" + r"""
-        \vspace*{\fill}
+        Students with surname beginning with
+        \textcolor{white}{\hl{""" + f"{people[0]} to {people[1]}" + r"""}} (inclusive)
+        \vspace*{\fill}}
     \end{center}
 
     \newpage
@@ -131,3 +142,8 @@ with open('student_rooms.tex', 'w') as f:
 #     """)
 
 #     f.write("\n" + r"\end{document}")
+
+subprocess.run(['latexmk', '-pdf', '-shell-escape', 'student_list.tex'])
+subprocess.run(['latexmk', '-f', '-c', 'student_list.tex'])
+subprocess.run(['latexmk', '-pdf', '-shell-escape', 'student_rooms.tex'])
+subprocess.run(['latexmk', '-f', '-c', 'student_rooms.tex'])
