@@ -1,7 +1,9 @@
 *.csv
 *.pdf
-!Utilities/*.pdf
+!Lab Teaching Resources/*/*.pdf
 *.aux
 *.tex
 *.log
 Lab Group Allocations/groups/*
+!Lab Handouts/*/*.pdf
+!Lab Handouts/*/*/*.pdf
