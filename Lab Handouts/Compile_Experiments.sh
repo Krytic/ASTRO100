@@ -1,7 +1,6 @@
-rm -rf handouts
-mkdir handouts
-mkdir handouts/solutions
-mkdir handouts/covers
+# rm -rf handouts
+mkdir -p handouts/solutions
+mkdir -p handouts/covers
 
 for EXPT in 1 2 3 4
 do
